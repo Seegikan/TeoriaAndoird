@@ -9,17 +9,23 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-public class TriangulosLocos
-{
+public class TriangulosLocos {
 
-        private FloatBuffer vertexBuffer;
-        private ShortBuffer drawListBuffer;
+    private FloatBuffer vertexBuffer;
+    private ShortBuffer drawListBuffer;
+     private  int vPMatrixHandle;//nueva variable---------
 
-        private final String vertexShaderCode =
-                "attribute vec4 vPosition;" +
-                        "void main() {" +
-                        "gl_Position =  vPosition;" +
-                        "}";
+    private final String vertexShaderCode =
+            /*"attribute vec4 vPosition;" +
+                    "void main() {" +
+                    "gl_Position =  vPosition;" +
+                    "}"*/
+            "uniform mat4 uMVPMatrix;"+
+                    "attribute vec4 vPosition;" +
+                    "void main() {"+
+                    "gl_Position = uMVPMatrix * vPosition;"+
+                    "}";
+
         private final String fragmentShaderCode =
                 "precision mediump float;" +
                         "uniform vec4 vColor;" +
@@ -82,7 +88,8 @@ public class TriangulosLocos
 
         private final int vertexStride = COORDS_PER_VERTEX * 4; //Vertex stride
 
-        public void draw()
+    public void draw(float[] mvpMatrix)
+
         {
             //Añadir nuestro programa al entorno de OpenGL
             GLES20.glUseProgram(mProgram);
@@ -93,7 +100,11 @@ public class TriangulosLocos
             GLES20.glEnableVertexAttribArray(positionHandle);
             GLES20.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, vertexBuffer);
             colorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-            GLES20.glUniform4fv(colorHandle, 1, color, 0);
+            GLES20.glUniform4fv(colorHandle, 1, color, 0);//------------------Aqui es normal
+            //aplicamos la matriz mvp a nuestro programa
+            vPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+            //se aplican los valores de la proyeccion a la vista multiple del cel
+            GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0);
 
             GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
